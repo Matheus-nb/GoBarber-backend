@@ -1,16 +1,21 @@
 // import AppError from '@shared/errors/AppError';
 
+import FakeCacheProvider from '@shared/container/providers/CacheProvider/fakes/FakeCacheProvider';
 import FakeAppointmentsRepository from '../repositories/fakes/FakeAppointmentsRepository';
 import ListProviderAppointmentsService from './ListProviderAppointmentsService';
 
 let fakeAppointmentsRepository: FakeAppointmentsRepository;
 let ListProviderAppointments: ListProviderAppointmentsService;
+let fakeCacheProvider: FakeCacheProvider;
 
 describe('ListProviderAppointments', () => {
     beforeEach(() => {
         fakeAppointmentsRepository = new FakeAppointmentsRepository();
+        fakeCacheProvider = new FakeCacheProvider();
+
         ListProviderAppointments = new ListProviderAppointmentsService(
             fakeAppointmentsRepository,
+            fakeCacheProvider,
         );
     });
 
@@ -46,4 +51,19 @@ describe('ListProviderAppointments', () => {
             appointment3,
         ]);
     });
+});
+it('should be able to list the appointments on a specific day from cache', async () => {
+    await fakeCacheProvider.save(
+        'provider-appointments:provider1:2021-5-20',
+        '13:00:00',
+    );
+
+    const ListAppointments = await ListProviderAppointments.execute({
+        provider_id: 'provider1',
+        day: 20,
+        month: 5,
+        year: 2021,
+    });
+
+    expect(ListAppointments).toEqual('13:00:00');
 });
